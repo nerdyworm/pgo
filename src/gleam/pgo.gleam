@@ -5,7 +5,6 @@
 // TODO: transactions
 // TODO: JSON support
 import gleam/dynamic.{type DecodeErrors, type Decoder, type Dynamic}
-
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result
@@ -87,20 +86,16 @@ pub fn url_config(database_url: String) -> Result(Config, Nil) {
   use uri <- result.then(uri.parse(database_url))
   use #(userinfo, host, path, db_port) <- result.then(case uri {
     Uri(
-        scheme: Some("postgres"),
-        userinfo: Some(userinfo),
-        host: Some(host),
-        port: Some(db_port),
-        path: path,
-        ..,
-      ) -> Ok(#(userinfo, host, path, db_port))
+      scheme: Some("postgres"),
+      userinfo: Some(userinfo),
+      host: Some(host),
+      port: Some(db_port),
+      path: path,
+      ..,
+    ) -> Ok(#(userinfo, host, path, db_port))
     _ -> Error(Nil)
   })
-  use #(user, password) <- result.then(case string.split(userinfo, ":") {
-    [user] -> Ok(#(user, None))
-    [user, password] -> Ok(#(user, Some(password)))
-    _ -> Error(Nil)
-  })
+  use #(user, password) <- result.then(string.split_once(userinfo, ":"))
   case string.split(path, "/") {
     ["", database] ->
       Ok(
@@ -110,7 +105,7 @@ pub fn url_config(database_url: String) -> Result(Config, Nil) {
           port: db_port,
           database: database,
           user: user,
-          password: password,
+          password: Some(password),
         ),
       )
     _ -> Error(Nil)
@@ -131,33 +126,73 @@ pub type Connection
 /// or it cannot connect for another reason it will continue to attempt to
 /// connect, and any queries made using the connection pool will fail.
 @external(erlang, "gleam_pgo_ffi", "connect")
-pub fn connect(a: Config) -> Connection
+pub fn connect(a: Config) -> Connection {
+  let _ = a
+  panic as "erlang only"
+}
 
 /// Shut down a connection pool.
 @external(erlang, "gleam_pgo_ffi", "disconnect")
-pub fn disconnect(a: Connection) -> Nil
+pub fn disconnect(a: Connection) -> Nil {
+  let _ = a
+  Nil
+}
 
 /// A value that can be sent to PostgreSQL as one of the arguments to a
 /// parameterised SQL query.
 pub type Value
 
 @external(erlang, "gleam_pgo_ffi", "null")
-pub fn null() -> Value
+pub fn null() -> Value {
+  panic as "erlang only"
+}
 
 @external(erlang, "gleam_pgo_ffi", "coerce")
-pub fn bool(a: Bool) -> Value
+pub fn bool(a: Bool) -> Value {
+  let _ = a
+  panic as "erlang only"
+}
 
 @external(erlang, "gleam_pgo_ffi", "coerce")
-pub fn int(a: Int) -> Value
+pub fn int(a: Int) -> Value {
+  let _ = a
+  panic as "erlang only"
+}
 
 @external(erlang, "gleam_pgo_ffi", "coerce")
-pub fn float(a: Float) -> Value
+pub fn float(a: Float) -> Value {
+  let _ = a
+  panic as "erlang only"
+}
 
 @external(erlang, "gleam_pgo_ffi", "coerce")
-pub fn text(a: String) -> Value
+pub fn text(a: String) -> Value {
+  let _ = a
+  panic as "erlang only"
+}
 
 @external(erlang, "gleam_pgo_ffi", "coerce")
-pub fn bytea(a: BitArray) -> Value
+pub fn text_array(a: List(String)) -> Value {
+  let _ = a
+  panic as "erlang only"
+}
+
+// heh, this is type safe :rofl:
+pub fn array(list: List(a), fun) -> Value {
+  any(list.map(list, fun))
+}
+
+@external(erlang, "gleam_pgo_ffi", "coerce")
+fn any(any: any) -> Value {
+  let _ = any
+  panic as "erlang only"
+}
+
+@external(erlang, "gleam_pgo_ffi", "coerce")
+pub fn bytea(a: BitArray) -> Value {
+  let _ = a
+  panic as "erlang only"
+}
 
 pub fn nullable(inner_type: fn(a) -> Value, value: Option(a)) -> Value {
   case value {
@@ -176,7 +211,12 @@ fn run_query(
   a: Connection,
   b: String,
   c: List(Value),
-) -> Result(#(Int, List(Dynamic)), QueryError)
+) -> Result(#(Int, List(Dynamic)), QueryError) {
+  let _ = a
+  let _ = b
+  let _ = c
+  panic as "erlang only"
+}
 
 pub type QueryError {
   /// The query failed as a database constraint would have been violated by the
